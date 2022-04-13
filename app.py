@@ -73,7 +73,8 @@ class VocabBot():
         #print(f'Last: {last}')
         #print(f'New: {voca}')
         mess = f'\n【解答】{last}\n\n'
-        mess += f'【題目】{voca}'
+        mess += f'【題目】{voca}\n'
+        mess += f'【發音】https://s.yimg.com/bg/dict/dreye/live/f/{voca}.mp3'
         data = {
                 'message': mess
                 }
