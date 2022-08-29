@@ -16,7 +16,7 @@ class VocabBot():
         # Show the en and ch voc
         # last_pushed_index
         vid = self.pushed[-1] - 1
-        ans = f'self.read_jp_vocabs[vid]\n{self.ch_vocabs[vid]}'
+        ans = f'{self.jp_vocabs[vid]}\n{self.ch_vocabs[vid]}'
         return ans
 
     def gen_new_question(self):
