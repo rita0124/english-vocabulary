@@ -1,4 +1,5 @@
 import csv
+import json
 import requests
 from bs4 import BeautifulSoup
 from random import randrange
@@ -16,7 +17,10 @@ class VocabBot():
         # Show the en and ch voc
         # last_pushed_index
         vid = self.pushed[-1] - 1
-        ans = f'{self.jp_vocabs[vid]}\n{self.ch_vocabs[vid]}'
+        speak_jp_word = self.jp_vocabs[vid].split('; ')[0]
+        ans = f'{self.jp_vocabs[vid]}\n'
+        ans += f'{self.gen_pronun_jp(speak_jp_word)}\n'
+        ans += f'{self.ch_vocabs[vid]}\n'
         return ans
 
     def gen_new_question(self):
@@ -117,6 +121,12 @@ class VocabBot():
             word = ''.join([down_spell, pronun])
 
         return word
+
+    def gen_pronun_jp(self, word):
+        url = 'https://ttsmp3.com/makemp3_new.php'
+        payload = {'msg': word, 'lang':'Takumi', 'source':'ttsmp3'}
+        resp = json.loads(requests.post(url, data=payload).text)
+        return resp['URL']
 
     def send_message(self):
         headers = {
