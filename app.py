@@ -12,6 +12,7 @@ class VocabBot():
         self.vocabs = self.read_vocabs()
         self.ch_vocabs = self.read_ch_vocabs()
         self.jp_vocabs = self.read_jp_vocabs()
+        self.pronunce_sentence = None
 
     def gen_last_answer(self):
         # Show the en and ch voc
@@ -19,8 +20,10 @@ class VocabBot():
         vid = self.pushed[-1] - 1
         speak_jp_word = self.jp_vocabs[vid].split('; ')[0]
         ans = f'{self.jp_vocabs[vid]}\n'
-        ans += f'{self.gen_pronun_jp(speak_jp_word)}\n'
-        ans += f'{self.ch_vocabs[vid]}\n'
+        ans += f'【發音】{self.gen_pronun_jp(speak_jp_word)}\n'
+        ans += f'【例句】{self.pronunce_sentence}\n'
+        ans += f'【字典】https://jisho.org/search/{speak_jp_word}\n'
+        ans += f'【中文】{self.ch_vocabs[vid]}\n'
         return ans
 
     def gen_new_question(self):
@@ -70,6 +73,14 @@ class VocabBot():
         #print(vocabs)
         return vocabs
 
+    # Ask soup
+    # https://jisho.org/search/{word}
+    def get_soup_jisho(self, word):
+        url = f'https://jisho.org/search/{word}'
+        response = requests.get(url)
+        soup = BeautifulSoup(response.text, 'html.parser')
+        return soup
+
     # Search Chinese on cdict
     def query_word(word):
         url = f'https://cdict.net/?q={word}'
@@ -81,11 +92,8 @@ class VocabBot():
         return word
 
     # Search Japanese on jisho
-    # https://jisho.org/search/{word}
     def query_word_jp(self, word):
-        url = f'https://jisho.org/search/{word}'
-        response = requests.get(url)
-        soup = BeautifulSoup(response.text, 'html.parser')
+        soup = self.get_soup_jisho(word)
         block = soup.find('div', {"class": "concept_light-representation"})
 
         # Sorry, couldn't find any words matching appreciable.
@@ -122,10 +130,46 @@ class VocabBot():
 
         return word
 
+    # Search Japanese on jisho
+    def query_sentence_jp(self, word):
+        soup = self.get_soup_jisho(word)
+        block = soup.find('div', {"class": "sentence_content"})
+
+        # Sorry, couldn't find any words matching appreciable.
+        if not block:
+            return
+
+        # 包含漢字的句子切片
+        sentence_block = block.find_all( 'span', { 'class', 'unlinked' } )
+        sentence = ''
+        for s in sentence_block:
+             sentence += s.getText()
+        # 句子中出現的片假名
+        pronun_block = block.find_all( 'span', { 'class', 'furigana' } )
+        words = []
+        for word_block in pronun_block:
+            words.append(word_block.getText())
+        sentence_info = {
+                'sentence': sentence,
+                'words': words }
+        return sentence_info
+
     def gen_pronun_jp(self, word):
         url = 'https://ttsmp3.com/makemp3_new.php'
-        payload = {'msg': word, 'lang':'Takumi', 'source':'ttsmp3'}
+        sentence_dict = self.query_sentence_jp(word)
+        sentence = sentence_dict['sentence']
+        # sentence += ', '.join(sentence_dict['words'])
+        # vocab
+        words = ''
+        for w in sentence_dict['words']:
+            words += f', 〖{w}〗'
+        sentence += words
+        pronun = ''
+        pronun += f'{word}, '
+        pronun += f'{sentence}'
+        payload = {'msg': pronun, 'lang':'Takumi', 'source':'ttsmp3'}
         resp = json.loads(requests.post(url, data=payload).text)
+        self.pronunce_sentence = pronun
         return resp['URL']
 
     def send_message(self):
