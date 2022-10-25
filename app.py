@@ -152,11 +152,17 @@ class VocabBot():
         sentence_info = {
                 'sentence': sentence,
                 'words': words }
-        return sentence_info
+        if sentence_info:
+            return sentence_info
 
     def gen_pronun_jp(self, word):
         url = 'https://ttsmp3.com/makemp3_new.php'
+        print(f'--> {word}')
         sentence_dict = self.query_sentence_jp(word)
+        # To prevent like 複雑さ do not get any sentence
+        # but in querying in english
+        if not sentence_dict:
+            sentence_dict = self.query_sentence_jp(self.vocabs[self.pushed[-1] -1])
         sentence = sentence_dict['sentence']
         # sentence += ', '.join(sentence_dict['words'])
         # vocab
