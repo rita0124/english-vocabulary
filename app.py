@@ -137,6 +137,7 @@ class VocabBot():
 
         # Sorry, couldn't find any words matching appreciable.
         if not block:
+            print('not block!!')
             return
 
         # 包含漢字的句子切片
@@ -161,14 +162,16 @@ class VocabBot():
         sentence_dict = self.query_sentence_jp(word)
         # To prevent like 複雑さ do not get any sentence
         # but in querying in english
-        if not sentence_dict:
-            sentence_dict = self.query_sentence_jp(self.vocabs[self.pushed[-1] -1])
-        sentence = sentence_dict['sentence']
-        # sentence += ', '.join(sentence_dict['words'])
-        # vocab
+        sentence_dict = self.query_sentence_jp(word)
+        # There might return None since no sentence
+        if sentence_dict is not None:
+            sentence = sentence_dict['sentence']
+        else:
+            sentence = 'no example sentence'
         words = ''
-        for w in sentence_dict['words']:
-            words += f', 〖{w}〗'
+        if sentence_dict is not None:
+            for w in sentence_dict['words']:
+                words += f', 〖{w}〗'
         sentence += words
         pronun = ''
         pronun += f'{word}, '
@@ -179,6 +182,7 @@ class VocabBot():
         return resp['URL']
 
     def send_message(self):
+        # radish
         headers = {
                 'Authorization': 'Bearer xxx'
                 }
@@ -195,6 +199,10 @@ class VocabBot():
         r = requests.post(
                 'https://notify-api.line.me/api/notify',
                 headers=headers,
+                data=data)
+        r = requests.post(
+                'https://notify-api.line.me/api/notify',
+                headers=headers2,
                 data=data)
         print(data)
 
