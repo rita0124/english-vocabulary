@@ -1,3 +1,4 @@
+import os
 import csv
 import json
 import requests
@@ -184,7 +185,11 @@ class VocabBot():
     def send_message(self):
         # radish
         headers = {
-                'Authorization': 'Bearer xxx'
+                'Authorization': os.environ.get('DriverSecret_1')
+                }
+        # driver
+        headers2 = {
+                'Authorization': os.environ.get('DriverSecret_2')
                 }
         last = self.gen_last_answer()
         voca = self.gen_new_question()
